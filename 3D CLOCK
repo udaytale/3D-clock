@@ -1,0 +1,90 @@
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Application;
+import javafx.scene.Group;
+import javafx.scene.PerspectiveCamera;
+import javafx.scene.Scene;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Circle;
+import javafx.scene.transform.Rotate;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import java.time.LocalTime;
+
+public class Clock3D extends Application {
+
+    private static final double WIDTH = 400;
+    private static final double HEIGHT = 400;
+    private static final double RADIUS = 150;
+    
+    private Line secondHand, minuteHand, hourHand;
+    private Circle clockFace;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("3D Analog Clock");
+
+        // Create a group to hold the clock components
+        Group root = new Group();
+
+        // Create a clock face (circle)
+        clockFace = new Circle(WIDTH / 2, HEIGHT / 2, RADIUS);
+        clockFace.setFill(Color.WHITE);
+        clockFace.setStroke(Color.BLACK);
+        clockFace.setStrokeWidth(5);
+
+        // Create the hands of the clock
+        secondHand = createHand(2, Color.RED);
+        minuteHand = createHand(6, Color.BLACK);
+        hourHand = createHand(10, Color.BLACK);
+
+        // Add the clock face and hands to the group
+        root.getChildren().addAll(clockFace, secondHand, minuteHand, hourHand);
+
+        // Set up the camera for a 3D effect (perspective)
+        PerspectiveCamera camera = new PerspectiveCamera(true);
+        camera.setTranslateZ(-500);
+        Scene scene = new Scene(root, WIDTH, HEIGHT, true);
+        scene.setCamera(camera);
+
+        // Set up the animation for the clock hands
+        Timeline timeline = new Timeline(
+                new KeyFrame(Duration.seconds(0), e -> updateClock()),
+                new KeyFrame(Duration.seconds(1), e -> updateClock())
+        );
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        timeline.play();
+
+        // Set up the stage and show it
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private Line createHand(double length, Color color) {
+        Line hand = new Line(WIDTH / 2, HEIGHT / 2, WIDTH / 2, HEIGHT / 2 - length);
+        hand.setStroke(color);
+        hand.setStrokeWidth(3);
+        hand.setEffect(new DropShadow(10, Color.BLACK)); // Adding a 3D shadow effect
+        return hand;
+    }
+
+    private void updateClock() {
+        LocalTime time = LocalTime.now();
+
+        // Get the current second, minute, and hour
+        double secondAngle = time.getSecond() * 6;  // Each second is 6 degrees
+        double minuteAngle = time.getMinute() * 6 + (time.getSecond() / 10.0); // Each minute is 6 degrees + interpolation based on second
+        double hourAngle = time.getHour() * 30 + (time.getMinute() / 2.0); // Each hour is 30 degrees + interpolation based on minute
+
+        // Rotate the hands based on the current time
+        secondHand.setRotate(secondAngle);
+        minuteHand.setRotate(minuteAngle);
+        hourHand.setRotate(hourAngle);
+    }
+}
